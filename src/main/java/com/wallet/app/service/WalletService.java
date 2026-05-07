@@ -4,10 +4,12 @@ import com.wallet.app.dto.WalletRequest;
 import com.wallet.app.entity.Wallet;
 import com.wallet.app.repository.WalletRepository;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 
 @Service
+@Transactional
 public class WalletService {
 
     private final WalletRepository walletRepository;
@@ -21,13 +23,13 @@ public class WalletService {
         Wallet wallet = walletRepository.findById(request.getWalletId())
                 .orElseThrow(() -> new RuntimeException("Wallet not found"));
 
-        if ("DEPOSIT".equalsIgnoreCase(request.getOperationType())) {
+        if ("CREDIT".equalsIgnoreCase(request.getOperationType())) {
 
             wallet.setBalance(
                     wallet.getBalance().add(request.getAmount())
             );
 
-        } else if ("WITHDRAW".equalsIgnoreCase(request.getOperationType())) {
+        } else if ("DEBIT".equalsIgnoreCase(request.getOperationType())) {
 
             if (wallet.getBalance().compareTo(request.getAmount()) < 0) {
                 throw new RuntimeException("Insufficient balance");
@@ -36,8 +38,11 @@ public class WalletService {
             wallet.setBalance(
                     wallet.getBalance().subtract(request.getAmount())
             );
+        } else {
+            throw new RuntimeException("Invalid operation type");
         }
 
+        
         walletRepository.save(wallet);
     }
 
